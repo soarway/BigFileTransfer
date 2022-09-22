@@ -21,4 +21,46 @@ flush()方法，从发送队列取出数据（如果是ChunkedInput类型的数�
 
 
 这个文件发送的例子测试下来一切正常
+
 ![1663854690708](https://user-images.githubusercontent.com/43486326/191765355-b8c3d359-87ec-45c2-a08f-5fbbc45df5f2.png)
+
+		bootstrap.group(boss, worker)
+				.channel(NioServerSocketChannel.class)
+				.option(ChannelOption.SO_BACKLOG, 1024)
+				//.option(ChannelOption.TCP_NODELAY, true)
+				.childOption(ChannelOption.TCP_NODELAY, true)
+				.childHandler(new ChannelInitializer<NioSocketChannel>() {
+					@Override
+					protected void initChannel(NioSocketChannel channel) throws Exception {
+						ChannelPipeline pipeline = channel.pipeline();
+						pipeline.addLast(new FileReceiveServerHandler());
+						pipeline.addLast(new FileSendServerHandler());
+						pipeline.addLast(new DecodeHandler());
+						pipeline.addLast(new EncodeHandler());
+						pipeline.addLast(new JoinClusterRequestHandler());
+						pipeline.addLast(new FilePacketServerHandler());
+
+						// pipeline.addLast("handler", new MyServerHandler());
+						pipeline.addLast(new ExceptionCaughtHandler());
+					}
+				});
+
+
+在流水线的末尾添加捕获异常的处理函数pipeline.addLast(new ExceptionCaughtHandler());
+
+package com.hhu.server.handler;
+
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+
+public class ExceptionCaughtHandler extends ChannelInboundHandlerAdapter {
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        // ..
+
+        //if (cause instanceof BusinessException) {
+            System.out.println("BusinessException");
+        //}
+    }
+}
