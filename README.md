@@ -45,7 +45,7 @@ flush()方法，从发送队列取出数据（如果是ChunkedInput类型的数�
 					}
 				});
 
-
+定义一个异常处理类，放在pipeline的最后
 在流水线的末尾添加捕获异常的处理函数pipeline.addLast(new ExceptionCaughtHandler());
 
 package com.hhu.server.handler;
